@@ -241,35 +241,93 @@ async def process_search(job_id: str, input_data: Dict[str, Any]):
             {"$set": {"status": "processing"}}
         )
         
-        # Initialize scrapers
+        # Initialize tools
+        photo_matcher = PhotoMatcher()
+        image_search = ReverseImageSearch()
         court_scraper = CourtScraper()
         matrimonial_scraper = MatrimonialScraper()
         dating_scraper = DatingScraper()
         social_scraper = SocialScraper()
         
+        # Photo analysis if photo provided
+        photo_features = None
+        photo_search_results = None
+        if input_data.get("photo_path"):
+            logger.info(f"Job {job_id}: Analyzing photo...")
+            await update_progress(job_id, "photo_analysis", 20)
+            photo_features = photo_matcher.extract_face_features(input_data["photo_path"])
+            await update_progress(job_id, "photo_analysis", 100)
+            
+            # If photo-only search, perform reverse image search
+            if input_data.get("search_type") == "photo_only":
+                logger.info(f"Job {job_id}: Performing reverse image search...")
+                await update_progress(job_id, "reverse_image_search", 20)
+                photo_search_results = await image_search.comprehensive_photo_search(input_data["photo_path"])
+                await update_progress(job_id, "reverse_image_search", 100)
+        
+        # Determine search parameters
+        search_name = input_data.get("name") or "Unknown"
+        if input_data.get("search_type") == "photo_only" and photo_search_results:
+            # Try to extract name from photo search results
+            if photo_search_results['social_media']:
+                search_name = photo_search_results['social_media'][0].get('profile_name', 'Unknown')
+        
         # Scrape court cases
-        logger.info(f"Job {job_id}: Scraping court cases...")
-        await update_progress(job_id, "court_cases", 10)
-        court_cases = await court_scraper.scrape(input_data["name"], input_data.get("state"))
-        await update_progress(job_id, "court_cases", 100)
+        if input_data.get("name"):
+            logger.info(f"Job {job_id}: Scraping court cases...")
+            await update_progress(job_id, "court_cases", 10)
+            court_cases = await court_scraper.scrape(input_data["name"], input_data.get("state"))
+            await update_progress(job_id, "court_cases", 100)
+        else:
+            court_cases = []
+            await update_progress(job_id, "court_cases", 100)
         
         # Scrape matrimonial profiles
         logger.info(f"Job {job_id}: Scraping matrimonial profiles...")
         await update_progress(job_id, "matrimonial_profiles", 10)
-        matrimonial_profiles = await matrimonial_scraper.scrape(input_data["name"], input_data.get("email"))
+        matrimonial_profiles = await matrimonial_scraper.scrape(search_name, input_data.get("email"))
         await update_progress(job_id, "matrimonial_profiles", 100)
         
         # Scrape dating profiles
         logger.info(f"Job {job_id}: Scraping dating profiles...")
         await update_progress(job_id, "dating_profiles", 10)
-        dating_profiles = await dating_scraper.scrape(input_data["name"], input_data.get("email"))
+        dating_profiles = await dating_scraper.scrape(search_name, input_data.get("email"))
         await update_progress(job_id, "dating_profiles", 100)
         
         # Scrape social media
         logger.info(f"Job {job_id}: Scraping social media...")
         await update_progress(job_id, "social_media", 10)
-        social_profiles = await social_scraper.scrape(input_data["name"], input_data.get("email"))
+        social_profiles = await social_scraper.scrape(search_name, input_data.get("email"))
         await update_progress(job_id, "social_media", 100)
+        
+        # Add photo search results to profiles if available
+        if photo_search_results:
+            for social_match in photo_search_results['social_media']:
+                social_profiles.append({
+                    'platform': social_match['platform'],
+                    'profile_url': social_match['profile_url'],
+                    'created_date': social_match.get('last_updated'),
+                    'relationship_status_history': [],
+                    'activity_pattern': {
+                        'photo_match_confidence': social_match['match_confidence'],
+                        'photo_count': social_match.get('photo_count', 0)
+                    },
+                    'photo_matched': True
+                })
+            
+            for dating_match in photo_search_results['dating_apps']:
+                dating_profiles.append({
+                    'platform': dating_match['platform'],
+                    'profile_url': dating_match['profile_url'],
+                    'created_date': None,
+                    'relationship_status_history': [],
+                    'activity_pattern': {
+                        'photo_match_confidence': dating_match['match_confidence'],
+                        'profile_active': dating_match.get('profile_active', False),
+                        'photo_matches': dating_match.get('photo_matches', 0)
+                    },
+                    'photo_matched': True
+                })
         
         # Combine all social profiles
         all_profiles = matrimonial_profiles + dating_profiles + social_profiles
@@ -282,11 +340,13 @@ async def process_search(job_id: str, input_data: Dict[str, Any]):
         await update_progress(job_id, "risk_calculation", 100)
         
         # Prepare result
+        photo_matched = bool(photo_features and photo_features.get('face_detected'))
         result = {
             "subject": {
-                "name": input_data["name"],
-                "dob": input_data["dob"],
-                "photo_matched": False
+                "name": search_name,
+                "dob": input_data.get("dob", "Unknown"),
+                "photo_matched": photo_matched,
+                "photo_info": photo_features if photo_features else None
             },
             "risk_score": risk_result,
             "court_cases": court_cases,
