@@ -232,6 +232,42 @@ async def get_search_result(job_id: str):
         logger.error(f"Error getting result: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/search/{job_id}/export/pdf")
+async def export_result_pdf(job_id: str):
+    \"\"\"Export search result as PDF\"\"\"
+    try:
+        from utils.pdf_generator import PDFGenerator
+        from fastapi.responses import FileResponse
+        
+        job = await db.searches.find_one({"id": job_id}, {"_id": 0})
+        if not job:
+            raise HTTPException(status_code=404, detail="Search job not found")
+        
+        if job["status"] != "completed":
+            raise HTTPException(status_code=400, detail="Search not completed yet")
+        
+        if not job.get("result"):
+            raise HTTPException(status_code=404, detail="No results found")
+        
+        # Generate PDF
+        pdf_generator = PDFGenerator()
+        pdf_dir = Path("/app/backend/exports")
+        pdf_dir.mkdir(exist_ok=True)
+        pdf_path = pdf_dir / f"report_{job_id}.pdf"
+        
+        pdf_generator.generate_report(job["result"], str(pdf_path))
+        
+        return FileResponse(
+            path=str(pdf_path),
+            media_type="application/pdf",
+            filename=f"past_matters_report_{job['result']['subject']['name'].replace(' ', '_')}.pdf"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 async def process_search(job_id: str, input_data: Dict[str, Any]):
     """Background task to process search"""
     try:
