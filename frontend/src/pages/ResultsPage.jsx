@@ -226,6 +226,17 @@ const ResultsPage = () => {
               <p className="text-sm text-gray-600 mt-2" data-testid="confidence-level">
                 Confidence: {result.risk_score.confidence_level}%
               </p>
+              {result.subject.photo_matched && (
+                <div className="mt-3 inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-lg" data-testid="photo-match-badge">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Photo Matched
+                  {result.subject.photo_info && result.subject.photo_info.face_count > 0 && (
+                    <span className="ml-2 text-xs">
+                      ({result.subject.photo_info.face_count} face{result.subject.photo_info.face_count > 1 ? 's' : ''} detected)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Score Breakdown */}
