@@ -353,11 +353,18 @@ const ResultsPage = () => {
                 {result.social_profiles.length > 0 ? (
                   <div className="space-y-4">
                     {result.social_profiles.map((profile, index) => (
-                      <Card key={index} className="bg-gray-50" data-testid={`social-profile-${index}`}>
+                      <Card key={index} className={`${profile.photo_matched ? 'bg-blue-50 border-blue-200 border-2' : 'bg-gray-50'}`} data-testid={`social-profile-${index}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <Badge className="mb-2" data-testid={`platform-${index}`}>{profile.platform}</Badge>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge className="mb-0" data-testid={`platform-${index}`}>{profile.platform}</Badge>
+                                {profile.photo_matched && (
+                                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 mb-0" data-testid={`photo-match-indicator-${index}`}>
+                                    Photo Match {profile.activity_pattern.photo_match_confidence && `${profile.activity_pattern.photo_match_confidence}%`}
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-sm text-gray-600" data-testid={`profile-url-${index}`}>{profile.profile_url}</p>
                             </div>
                           </div>
@@ -368,6 +375,9 @@ const ResultsPage = () => {
                             <p data-testid={`status-changes-${index}`}><strong>Status Changes:</strong> {profile.relationship_status_history.length}</p>
                             {profile.activity_pattern.last_active && (
                               <p data-testid={`last-active-${index}`}><strong>Last Active:</strong> {profile.activity_pattern.last_active}</p>
+                            )}
+                            {profile.activity_pattern.photo_match_confidence && (
+                              <p data-testid={`match-confidence-${index}`}><strong>Match Confidence:</strong> {profile.activity_pattern.photo_match_confidence}%</p>
                             )}
                           </div>
                         </CardContent>
