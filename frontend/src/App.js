@@ -2,6 +2,7 @@ import React from 'react';
 import '@/App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import SearchPage from './pages/SearchPage';
+import PhotoSearchPage from './pages/PhotoSearchPage';
 import ResultsPage from './pages/ResultsPage';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<SearchPage />} />
+          <Route path="/photo-search" element={<PhotoSearchPage />} />
           <Route path="/results/:jobId" element={<ResultsPage />} />
         </Routes>
       </BrowserRouter>
