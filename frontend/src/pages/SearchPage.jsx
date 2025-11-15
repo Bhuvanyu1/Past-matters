@@ -122,9 +122,19 @@ const SearchPage = () => {
           <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3" style={{ fontFamily: 'Space Grotesk' }} data-testid="main-heading">
             Past Matters
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto" data-testid="tagline">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-4" data-testid="tagline">
             Make informed decisions with comprehensive background verification
           </p>
+          <Link to="/photo-search">
+            <Button 
+              variant="outline" 
+              className="mt-2 border-purple-300 text-purple-600 hover:bg-purple-50"
+              data-testid="photo-search-link-button"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Search by Photo Instead
+            </Button>
+          </Link>
         </div>
 
         {/* Features */}
