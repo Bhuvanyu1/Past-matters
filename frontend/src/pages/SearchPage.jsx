@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Search, Shield, FileText, Users, AlertTriangle } from 'lucide-react';
+import { Upload, Search, Shield, FileText, Users, AlertTriangle, Camera } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
