@@ -18,6 +18,8 @@ from scrapers.matrimonial_scraper import MatrimonialScraper
 from scrapers.dating_scraper import DatingScraper
 from scrapers.social_scraper import SocialScraper
 from utils.risk_calculator import RiskCalculator
+from utils.photo_matcher import PhotoMatcher
+from utils.image_search import ReverseImageSearch
 
 
 ROOT_DIR = Path(__file__).parent
