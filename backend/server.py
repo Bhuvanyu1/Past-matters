@@ -112,12 +112,19 @@ async def root():
     return {"message": "Past Matters API v1.0"}
 
 @api_router.post("/search", response_model=SearchJobResponse)
-async def create_search(name: str = Form(...), dob: str = Form(...), 
+async def create_search(name: str = Form(None), dob: str = Form(None), 
                        state: Optional[str] = Form(None),
                        email: Optional[str] = Form(None),
                        phone: Optional[str] = Form(None),
                        photo: Optional[UploadFile] = File(None)):
     try:
+        # Validate: either (name AND dob) OR photo must be provided
+        if not photo and (not name or not dob):
+            raise HTTPException(
+                status_code=400, 
+                detail="Either provide both name and DOB, or upload a photo to search"
+            )
+        
         job_id = str(uuid.uuid4())
         
         # Save photo if uploaded
@@ -130,6 +137,9 @@ async def create_search(name: str = Form(...), dob: str = Form(...),
                 content = await photo.read()
                 await f.write(content)
         
+        # Determine search type
+        search_type = "photo_only" if (photo and not name) else "standard"
+        
         # Create search job
         job_data = {
             "id": job_id,
@@ -139,12 +149,15 @@ async def create_search(name: str = Form(...), dob: str = Form(...),
                 "state": state,
                 "email": email,
                 "phone": phone,
-                "photo_path": str(photo_path) if photo_path else None
+                "photo_path": str(photo_path) if photo_path else None,
+                "search_type": search_type
             },
             "status": "queued",
             "progress": {
                 "overall": 0,
                 "stages": {
+                    "photo_analysis": 0 if photo else 100,
+                    "reverse_image_search": 0 if search_type == "photo_only" else 100,
                     "court_cases": 0,
                     "matrimonial_profiles": 0,
                     "dating_profiles": 0,
@@ -166,9 +179,11 @@ async def create_search(name: str = Form(...), dob: str = Form(...),
         return SearchJobResponse(
             job_id=job_id,
             status="queued",
-            estimated_time=180,  # 3 minutes
+            estimated_time=240 if search_type == "photo_only" else 180,
             status_url=f"/api/search/{job_id}/status"
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating search: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
