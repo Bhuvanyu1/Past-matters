@@ -149,18 +149,62 @@ const ResultsPage = () => {
 
   if (!result) return null;
 
+  const handleExportPDF = async () => {
+    try {
+      toast.info('Generating PDF...');
+      const response = await axios.get(`${API}/search/${jobId}/export/pdf`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `past_matters_report_${result.subject.name.replace(/\s+/g, '_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
+
+  const handleShare = () => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success('Link copied to clipboard!');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4" data-testid="results-container">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Button variant="outline" onClick={() => navigate('/')} className="shadow-md" data-testid="back-btn">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            New Search
-          </Button>
-          <div className="flex items-center space-x-2">
-            <Shield className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-900" style={{ fontFamily: 'Space Grotesk' }}>Past Matters</span>
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" onClick={() => navigate('/')} className="shadow-md" data-testid="back-btn">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              New Search
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-purple-600" />
+              <span className="font-semibold text-gray-900" style={{ fontFamily: 'Space Grotesk' }}>Past Matters</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" onClick={handleShare} className="shadow-md" data-testid="share-btn">
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF} className="shadow-md" data-testid="export-pdf-btn">
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+            <Button onClick={() => navigate(`/analytics/${jobId}`)} className="bg-purple-600 hover:bg-purple-700 shadow-lg" data-testid="analytics-btn">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              View Analytics
+            </Button>
           </div>
         </div>
 
