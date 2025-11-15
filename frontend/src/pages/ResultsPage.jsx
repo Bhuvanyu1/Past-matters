@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Shield, AlertTriangle, CheckCircle, XCircle, Clock, FileText, Users, TrendingUp, Calendar } from 'lucide-react';
+import { ArrowLeft, Shield, AlertTriangle, CheckCircle, XCircle, Clock, FileText, Users, TrendingUp, Calendar, Download, BarChart3, Share2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
