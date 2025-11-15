@@ -234,7 +234,7 @@ async def get_search_result(job_id: str):
 
 @api_router.get("/search/{job_id}/export/pdf")
 async def export_result_pdf(job_id: str):
-    \"\"\"Export search result as PDF\"\"\"
+    """Export search result as PDF"""
     try:
         from utils.pdf_generator import PDFGenerator
         from fastapi.responses import FileResponse
